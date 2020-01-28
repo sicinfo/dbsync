@@ -1,0 +1,79 @@
+{
+  "paths": {},
+  
+  "packages": {
+    
+    "vue": {
+      "main": "vue.min.js",
+      "path": "https://cdn.jsdelivr.net/npm/vue@2/dist",
+      "defaultExtension": "js"
+    },
+    
+    "vue-router": {
+      "main": "vue-router.min.js",
+      "path": "https://cdn.jsdelivr.net/npm/vue-router@3/dist",
+      "defaultExtension": "js"
+    },
+    
+    "axios": {
+      "main": "axios.min.js",
+      "path": "https://cdn.jsdelivr.net/npm/axios@0.19.0/dist",
+      "defaultExtension": "js"
+    },
+    
+    "underscore": {
+      "main": "underscore-min.js",
+      "path": "https://cdn.jsdelivr.net/npm/underscore@1",
+      "defaultExtension": "js"
+    },
+
+    "backbone": {
+      "main": "backbone-min.js",
+      "path": "https://cdn.jsdelivr.net/npm/backbone@1",
+      "defaultExtension": "js"
+    },
+
+    "h-vue": {
+      "main": "h-vue.js",
+      "path": "https://cdn.jsdelivr.net/gh/sicinfo/hypertag@0/lib",
+      "defaultExtension": "js"
+    },
+
+    "jquery": {
+      "main": "myfetch.js",
+      "path": "/opt/sicinfo-myutils/libs",
+      "defaultExtension": "js"
+    },
+    
+    "myfetch": {
+      "main": "myfetch.js",
+      "path": "/opt/sicinfo-myutils/libs",
+      "defaultExtension": "js"
+    },
+    
+    "dbsync": {
+      "main": "dbsync.js",
+      "path": "/opt/sicinfo-dbsync/src",
+      "defaultExtension": "js"
+    },
+    
+    "cadastro-model": {
+      "main": "cadastro-model.js",
+      "path": "models",
+      "defaultExtension": "js"
+    },
+    
+    "input-component": {
+      "main": "input-component.js",
+      "path": "components",
+      "defaultExtension": "js"
+    },
+    
+    "boot": {
+      "main":"bootstrap.js",
+      "path": "/app",
+      "defaultExtension": "js"
+    }
+    
+  }
+}
