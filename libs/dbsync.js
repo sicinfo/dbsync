@@ -8,7 +8,7 @@
  * require systemjs
  */
 
-define(['axios', 'underscore'], (axios, { isEqual }) => {
+ define(['axios', 'underscore'], (axios, { isEqual }) => {
   
   const 
     
@@ -63,15 +63,29 @@ define(['axios', 'underscore'], (axios, { isEqual }) => {
       });
     },
     
-    _modelId = (collection, attrs = {}) => {
-      return attrs[collection.model.prototype.idAttribute] || attrs[Model.prototype.idAttribute];
-    },
-
-    _isModel = (model) => {
-      return model instanceof Model;
-    },
+    _modelId = 
+      /**
+       * @param {Collection} arg0 - collection
+       * @param {*} arg1 {} - attributes
+       * @return {string}
+       */
+      (arg0, arg1 = {}) => arg1[arg0.model.prototype.idAttribute] || arg1[Model.prototype.idAttribute],
     
-    _validate = () => true;
+    _isModel = 
+      /** 
+       * @param {*} arg - model
+       * @return {boolean} 
+       */ 
+      arg => arg instanceof Model,
+
+    _validate =
+      /** 
+       * @param {*} a 
+       * @param {*} b 
+       * @param {*} c 
+       * @return {boolean} 
+       */
+      (a, b, c) => true;
 
 
   class Sync {
@@ -82,6 +96,11 @@ define(['axios', 'underscore'], (axios, { isEqual }) => {
     
     get baseURL() {
       throw { 'code': 'SYNC', 'message': 'baseURL should be defined' };
+    }
+    
+    /** @return {string} */
+    get url() {
+      throw { 'code': 'SYNC', 'message': 'url should be defined' };
     }
     
     get cid() {
@@ -127,14 +146,14 @@ define(['axios', 'underscore'], (axios, { isEqual }) => {
     
     unset(attrs, opts) {
       if (attrs == null) return this;
-      if ('object' !== typeof attrs) (key => ((attrs = {})[key] = undefined))(attrs);
+      if ('object' !== typeof attrs) (arg => ((attrs = {})[arg] = undefined))(attrs);
       return this.set(attrs, Object.assign({}, opts, { 'unset': true }));
     }
     
     set(attrs, val, opts) {
       if (attrs == null) return this;
       if ('object' === typeof attrs) opts = val;
-      else (key => ((attrs = {})[key] = val))(attrs);
+      else (arg => ((attrs = {})[arg] = val))(attrs);
       opts || (opts = {});
       
       const 
@@ -159,7 +178,7 @@ define(['axios', 'underscore'], (axios, { isEqual }) => {
       Object.entries(attrs)
       
         // modifica os attributos privados para corresponder
-        .map(([key, val]) => [privAttrs.includes(key) && Reflect.get(this, `${key.slice(1)}Attribute`)|| key, val])
+        .map(([arg, val]) => [privAttrs.includes(arg) && Reflect.get(this, `${arg.slice(1)}Attribute`)|| arg, val])
         
         // nao alterar id e key se nao for novo registro
         .filter(([attr, val]) => !(_privKeys && _privKeys.has(attr)))
@@ -259,9 +278,14 @@ define(['axios', 'underscore'], (axios, { isEqual }) => {
       );
     }
 
+    /**
+     * @param {*} attrs 
+     * @param {*} val 
+     * @param {*} opts 
+     */
     save(attrs, val, opts) {
       attrs == null || 'object' === typeof(attrs) ?
-      opts = val : (key => ((attrs = {})[key] = val))(attrs);
+      opts = val : (arg => ((attrs = {})[arg] = val))(attrs);
       
       opts = Object.assign({ 'validate': true, 'parse': true }, opts);
       
@@ -273,10 +297,9 @@ define(['axios', 'underscore'], (axios, { isEqual }) => {
           [data, params] = [{}, {}],
           _data = Object.assign({ 'attrs': 'PATCH' === method ? this.changedAttrs() : this.attrs }, opts);
           
-        for (const [key, val] of Object.entries(this.toJSON(_data))) {
-          (this.isNew || !privAttrs.includes(key)) &&
-          Reflect.set(data, key, val);
-          // Reflect.set(privAttrs.includes(key) ? this.isNew && params || {} : data, key, val);
+        for (const [arg, val] of Object.entries(this.toJSON(_data))) {
+          (this.isNew || !privAttrs.includes(arg)) && Reflect.set(data, arg, val);
+          // Reflect.set(privAttrs.includes(arg) ? this.isNew && params || {} : data, arg, val);
         }
         
         if (!(Object.keys(data).length + Object.keys(params).length)) {
@@ -291,10 +314,17 @@ define(['axios', 'underscore'], (axios, { isEqual }) => {
         _setFlag(this, 'changing');
         _set(this, 'changed', {});
         return this;
-      }).catch(err => console.log(err) || err);
+      }).catch(
+        /** @param {*} err */
+        err => { console.log(err); return err }
+      );
 
     }
     
+    /** 
+     * @param {*} opts 
+     * @return {JSON}
+     */
     toJSON(opts) {
       return Object.fromEntries(
         Object.entries(opts && opts.attrs || this.attrs).map(([k, v]) => 
@@ -308,8 +338,8 @@ define(['axios', 'underscore'], (axios, { isEqual }) => {
       Reflect.has(opts, 'method') && 
       'GET' === Reflect.get(opts, 'method') && 
       Object.assign(attrs, Object.entries(attrs)
-        .filter(([key, val]) => 'object' === typeof val)
-        .reduce((acc, [key, val]) => Reflect.set(acc, key, new Model(val, opts)) && acc, {}));
+        .filter(([arg, val]) => 'object' === typeof val)
+        .reduce((acc, [arg, val]) => Reflect.set(acc, arg, new Model(val, opts)) && acc, {}));
 
       return attrs;
     }
@@ -339,7 +369,7 @@ define(['axios', 'underscore'], (axios, { isEqual }) => {
       super(opts);
       [
         'cids',  'ids', 'inherits', 'froms', 'tos'
-      ].forEach(key => _set(this, key, new Map()));
+      ].forEach(arg => _set(this, arg, new Map()));
     }
     
     has(obj) {
@@ -367,7 +397,10 @@ define(['axios', 'underscore'], (axios, { isEqual }) => {
               exist = existing.toJSON(opts);
               
             if (!isEqual(exist, attrs)) toMerge.push(
-              existing.set(Object.fromEntries(Object.entries(attrs).filter(([k, v]) => undefined !== v && exist[k] !== v)), opts)
+              existing.set(
+                Object.fromEntries(Object.entries(attrs).filter(([k, v]) => undefined !== v && exist[k] !== v)), 
+                opts
+              )
             );
           }
         }
@@ -397,24 +430,24 @@ define(['axios', 'underscore'], (axios, { isEqual }) => {
       ) || undefined;
     }
     
-    getByCid(key) {
-      return _get(this, 'cids').get(key);
+    getByCid(arg) {
+      return _get(this, 'cids').get(arg);
     }
     
-    getById(key) {
-      return _get(this, 'ids').get(key);
+    getById(arg) {
+      return _get(this, 'ids').get(arg);
     }
     
-    getByInherit(key) {
-      return _get(this, 'inherits').get(key);
+    getByInherit(arg) {
+      return _get(this, 'inherits').get(arg);
     }
     
-    getByFrom(key) {
-      return _get(this, 'froms').get(key);
+    getByFrom(arg) {
+      return _get(this, 'froms').get(arg);
     }
     
-    getByTo(key) {
-      return _get(this, 'tos').get(key);
+    getByTo(arg) {
+      return _get(this, 'tos').get(arg);
     }
     
     del(obj) {
@@ -467,6 +500,7 @@ define(['axios', 'underscore'], (axios, { isEqual }) => {
       return _get(this, 'cids').size;
     }
     
+    /** @return {string} */
     get service() {
       throw { 'message': 'service should be defined' };
     }
@@ -475,14 +509,17 @@ define(['axios', 'underscore'], (axios, { isEqual }) => {
       return this.service;
     }
     
-    get length() {
-      return _get(this, 'cids').size;
-    }
-    
+    /**
+     * @param {*} resp 
+     * @param {*} [opts] 
+     */
     parse(resp, opts) {
       return resp;
     }
     
+    /**
+     * @param {*} opts 
+     */
     fetch(opts = {}) {
       
       Reflect.has(opts, 'method') || Reflect.set(opts, 'method', 'GET');
@@ -493,20 +530,39 @@ define(['axios', 'underscore'], (axios, { isEqual }) => {
       );
     }
     
-    create(attrs, opts) {
-      return this._prepareModel(attrs, opts).save(null, opts)
-        .then(model => this.add(model, opts) && model);
+    /**
+     * @param {*} arg0 - attrs 
+     * @param {*} opts 
+     */
+    create(arg0, opts) {
+      return this._prepareModel(arg0, opts).save(null, opts)
+        .then(
+          /** @param {Model} arg - model */
+          arg => this.add(arg, opts) && arg
+        );
     }
     
+    /**
+     * @param {*} opts 
+     * @return {Array<JSON>}
+     */
     toJSON(opts) {
-      return Array.from(this.models).map(model => model.toJSON(opts));
+      return Array.from(this.models).map(
+        /** @param {Model} arg - model */
+        arg => arg.toJSON(opts)
+      );
     } 
     
-    // add collection in model, if not model create new model with collection defined
+    /**
+     * add collection in model, if not model create new model with collection defined
+     * @param {*} attrs - attributes
+     * @param {*} opts
+     * @return {Model}
+     */
     _prepareModel(attrs, opts) {
       return attrs && 
-        _isModel(attrs) &&
-        (_has(attrs, 'collection') || _set(attrs, 'collection', this)) && 
+        _isModel(attrs) && 
+        ( _has(attrs, 'collection') ||  _set(attrs, 'collection', this)) && 
         attrs ||
         new this.model(attrs, Object.assign({ 'collection': this }, opts));
     }
