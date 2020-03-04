@@ -1,0 +1,24 @@
+{
+  "name": "sicinfo-dbsync",
+  "version": "0.1.0",
+  "description": "sincronizador de banco de dados",
+  "main": "libs/dbsync.js",
+  "scripts": {
+    "test": "mocha test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sicinfo/dbsync.git"
+  },
+  "keywords": [
+    "dbsync",
+    "model",
+    "collection"
+  ],
+  "author": "moreira",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sicinfo/dbsync/issues"
+  },
+  "homepage": "https://github.com/sicinfo/dbsync#readme"
+}

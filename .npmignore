@@ -1,0 +1,5 @@
+*
+!libs/*.js
+!package.json
+!README.md
+!CHAGELOG.md
