@@ -1,6 +1,6 @@
 {
   "name": "sicinfo-dbsync",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "sincronizador de banco de dados",
   "main": "libs/dbsync.js",
   "scripts": {

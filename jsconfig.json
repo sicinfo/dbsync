@@ -1,41 +1,50 @@
 {
-  /* https://storybook.js.org/docs/configurations/typescript-config/#tsconfigjson */
   "compilerOptions": {
-    "target": "es2016",
-    // "module": "system",
-    "module": "commonjs",
-    "strict": true,
-    "removeComments": true,
-    // "incremental": true,
-    // "noImplicitAny": false,
-   "noImplicitReturns": true,
-   // "noImplicitThis": true,
-   // "noImplicitThis": false,
-   // "keyofStringsOnly": false,
-    // "emitBOM": true,
-    //"extendedDiagnostics": true,
-    //"newLine": "",
-    "baseUrl": ".",
-    "outDir": "libs",
-    // "rootDir": "./",
-    "lib": ["es5", "es6", "es7", "dom"],
-    "moduleResolution": "node",
-    // "locale": "pt-BR",
-    "paths": {
-      // "websocket": ["../node_modules/websocket/lib/websocket"]
-    },
-    // "types": ["node"],
-    // "typeRoots": [
-    //   "node_modules/@types" // <-- This guy
-    // ]
+    "module": "CommonJS",
+    "target": "es6",
+    "checkJs": true
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "tmp",
-    "test",
-    "**/*.spec.ts"
-  ]
+  "exclude": ["node_modules", "tmp", "**/node_modules/**"]
 }
+
+// {
+//   /* https://storybook.js.org/docs/configurations/typescript-config/#tsconfigjson */
+//   "compilerOptions": {
+//     "target": "es2016",
+//     // "module": "system",
+//     "module": "commonjs",
+//     "strict": true,
+//     "removeComments": true,
+//     // "incremental": true,
+//     // "noImplicitAny": false,
+//    "noImplicitReturns": true,
+//    // "noImplicitThis": true,
+//    // "noImplicitThis": false,
+//    // "keyofStringsOnly": false,
+//     // "emitBOM": true,
+//     //"extendedDiagnostics": true,
+//     //"newLine": "",
+//     "baseUrl": ".",
+//     "outDir": "libs",
+//     // "rootDir": "./",
+//     "lib": ["es5", "es6", "es7", "dom"],
+//     "moduleResolution": "node",
+//     // "locale": "pt-BR",
+//     "paths": {
+//       // "websocket": ["../node_modules/websocket/lib/websocket"]
+//     },
+//     // "types": ["node"],
+//     // "typeRoots": [
+//     //   "node_modules/@types" // <-- This guy
+//     // ]
+//   },
+//   "include": [
+//     "src/**/*.ts"
+//   ],
+//   "exclude": [
+//     "node_modules",
+//     "tmp",
+//     "test",
+//     "**/*.spec.ts"
+//   ]
+// }

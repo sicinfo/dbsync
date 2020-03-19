@@ -7,8 +7,7 @@
  * 
  * require systemjs
  */
-
- define(['axios', 'underscore'], (axios, { isEqual }) => {
+define(['axios', 'underscore'], (axios, { isEqual }) => {
   
   const 
     
@@ -149,60 +148,45 @@
       if ('object' !== typeof attrs) (arg => ((attrs = {})[arg] = undefined))(attrs);
       return this.set(attrs, Object.assign({}, opts, { 'unset': true }));
     }
-    
+
     set(attrs, val, opts) {
       if (attrs == null) return this;
       if ('object' === typeof attrs) opts = val;
       else (arg => ((attrs = {})[arg] = val))(attrs);
-      opts || (opts = {});
-      
+      if (!opts) opts = {};
+
       const 
         { unset, changing, remind = true, preserveKeys } = opts,
-        _privKeys = !this.isNew && new Set((preserveKeys ? privWord : privKeys).map(a => Reflect.get(this, `${a}Attribute`))),
+        _privKeys = new Set(this.isNew ? undefined : (preserveKeys ? privWord : privKeys).map(a => Reflect.get(this, `${a}Attribute`))),
         _changing = !!(_getFlag(this, 'changing') && changing);
-      
 
-      !(_getFlag(this, 'changing') && changing) &&
-      _set(this, 'changed', {}) &&
-      _set(this, 'preventAttrs', this.attrs) ||
-      (_has(this, 'changed') || _set(this, 'changed', {})) &&
-      (_has(this, 'preventAttrs') || _set(this, 'preventAttrs', {}));
-
+      _getFlag(this, 'changing') && changing ?
+        (_has(this, 'changed') || _set(this, 'changed', {})) &&
+        (_has(this, 'preventAttrs') || _set(this, 'preventAttrs', {})) :
+        _set(this, 'changed', {}) && _set(this, 'preventAttrs', this.attrs);
+    
       const 
         _attrs = _get(this, 'attrs'),
         _prev = _get(this, 'preventAttrs'),
         _changed = _get(this, 'changed');
+      _setFlag(this, 'changing', _changing || changing || false);
 
-      _setFlag(this, 'changing', _changing || changing);
-      
       Object.entries(attrs)
       
         // modifica os attributos privados para corresponder
         .map(([arg, val]) => [privAttrs.includes(arg) && Reflect.get(this, `${arg.slice(1)}Attribute`)|| arg, val])
         
         // nao alterar id e key se nao for novo registro
-        .filter(([attr, val]) => !(_privKeys && _privKeys.has(attr)))
+        .filter(([attr, val]) => !_privKeys.has(attr))
         .filter(([attr, val]) => {
 
-          !remind ||
-          isEqual(Reflect.get(_prev, attr), val) &&
-          Reflect.deleteProperty(_changed, attr) ||
-          Reflect.set(_changed, attr, val);
+          if (remind) isEqual(Reflect.get(_prev, attr), val) ?
+            Reflect.deleteProperty(_changed, attr) :
+            Reflect.set(_changed, attr, val);
           
-          unset &&
-          Reflect.deleteProperty(_attrs, attr) ||
-          Reflect.set(_attrs, attr, val);
-          
-// if ('idade' === attr) {          
-// console.log(!unset, attr, val);
-// console.log(_prev);          
-// console.log(_changed);          
-// console.log(_attrs);          
-// console.log('-.'.repeat(20));
-// }
-
+          if (unset) Reflect.deleteProperty(_attrs, attr);
+          else Reflect.set(_attrs, attr, val);
         });
-
       return this;
     }
     
@@ -316,7 +300,7 @@
         return this;
       }).catch(
         /** @param {*} err */
-        err => { console.log(err); return err }
+        err => { console.warn(err); return err }
       );
 
     }
@@ -372,55 +356,31 @@
       ].forEach(arg => _set(this, arg, new Map()));
     }
     
-    has(obj) {
-      return !!this.get(obj);
+    /**
+     * @param {*} models 
+     * @param {*} opts 
+     */
+    add(models, opts) {
+      return this.set(models, Object.assign({ 'merge': false }, opts, addOpts));
     }
     
-    set(models, opts) {
-      if (!models) return this;
+    /**
+     * @param {*} obj 
+     */
+    del(obj) {
+      obj = this.get(obj);
+      if (!obj) return false;
 
-      opts = Object.assign({}, setOpts, opts);
-      if (opts.parse && !_isModel(models)) models = this.parse(models, opts);
-
-      const
-        { add, merge, remove, sync } = opts,
-        [toAdd, toMerge, toRemove] = [[],[],[]];
-      
-      for (const model of Array.isArray(models) ? models : [models]) {
-        const existing = this.get(model);
-        
-        if (existing) {
-          if (merge) {
-            
-            const 
-              attrs = _isModel(model) && model.toJSON(opts) || model, 
-              exist = existing.toJSON(opts);
-              
-            if (!isEqual(exist, attrs)) toMerge.push(
-              existing.set(
-                Object.fromEntries(Object.entries(attrs).filter(([k, v]) => undefined !== v && exist[k] !== v)), 
-                opts
-              )
-            );
-          }
-        }
-        
-        else if (add) {
-          const _model = this._prepareModel(model, opts);
-          _addReference(this, _model, opts);
-          toAdd.push(_model);
-        }
-  
-      }
-      
-      if (remove) {
-        const models = new Set(toMerge.concat(toAdd).map(({ cid }) => cid));
-        _removeModels(this, Array.from(this.models).filter(m => !models.has(m.cid)));
-      }
-
-      return this;
+      const { cid, id, inherit, from, to } = obj;
+      return ((...a) => a.some(a => a))(
+        cid && _get(this, 'cids').delete(cid),
+        id && _get(this, 'ids').delete(id),
+        inherit && _get(this, 'inherits').delete(inherit),
+        from && _get(this, 'froms').delete(from),
+        to && _get(this, 'tos').delete(to)
+      );
     }
-    
+
     get(obj) {
       return obj && (
         'string' === typeof obj ? 
@@ -449,25 +409,59 @@
     getByTo(arg) {
       return _get(this, 'tos').get(arg);
     }
-    
-    del(obj) {
-      return ((_obj = this.get(obj)) => 
-        !!_obj && (({ cid, id, inherit, from, to } = _obj) =>
-          ((...a) => a.some(a => a))(
-            cid && _get(this, 'cids').delete(cid),
-            id && _get(this, 'ids').delete(id),
-            inherit && _get(this, 'inherits').delete(inherit),
-            from && _get(this, 'froms').delete(from),
-            to && _get(this, 'tos').delete(to)
-          )
-        )()
-      )();
+
+    has(obj) {
+      return !!this.get(obj);
     }
     
-    add(models, opts) {
-      return this.set(models, Object.assign({ 'merge': false }, opts, addOpts));
+    /**
+     * @param {*} models
+     * @param {*} opts 
+     */
+    set(models, opts) {
+      if (!models) return this;
+
+      opts = Object.assign({}, setOpts, opts);
+      if (opts.parse && !_isModel(models)) models = this.parse(models, opts);
+
+      const
+        { add, merge, remove, sync } = opts,
+        [toAdd, toMerge, toRemove] = [[],[],[]];
+      
+      for (const model of Array.isArray(models) ? models : [models]) {
+        const existing = this.get(model);
+
+        if (existing) {
+          if (merge) {
+            
+            const 
+              attrs = _isModel(model) && model.toJSON(opts) || model, 
+              exist = existing.toJSON(opts);
+              
+            if (!isEqual(exist, attrs)) toMerge.push(
+              existing.set(
+                Object.fromEntries(Object.entries(attrs).filter(([k, v]) => undefined !== v && exist[k] !== v)), 
+                opts
+              )
+            );
+          }
+        }
+        
+        else if (add) {
+          const _model = this._prepareModel(model, opts);
+          _addReference(this, _model, opts);
+          toAdd.push(_model);
+        }
+  
+      }
+      
+      if (remove) {
+        const models = new Set(toMerge.concat(toAdd).map(({ cid }) => cid));
+        _removeModels(this, Array.from(this.models).filter(m => !models.has(m.cid)));
+      }
+      return this;
     }
-    
+        
     get model() {
       return Model;
     }
@@ -518,16 +512,11 @@
     }
     
     /**
-     * @param {*} opts 
+     * @param {*} [opts] 
      */
-    fetch(opts = {}) {
-      
-      Reflect.has(opts, 'method') || Reflect.set(opts, 'method', 'GET');
-      Reflect.has(opts, 'parse') || Reflect.set(opts, 'parse', true);
-        
-      return this.sync(opts).then(({ result }) => 
-        this.set(opts.parse ? this.parse(result, opts) : result, opts)
-      );
+    fetch(opts) {
+      opts = Object.assign({ method: 'GET', parse: true }, opts);
+      return this.sync(opts).then(({ result }) => this.set(result, opts));
     }
     
     /**
@@ -560,13 +549,11 @@
      * @return {Model}
      */
     _prepareModel(attrs, opts) {
-      return attrs && 
-        _isModel(attrs) && 
-        ( _has(attrs, 'collection') ||  _set(attrs, 'collection', this)) && 
-        attrs ||
+      return attrs && _isModel(attrs) ? 
+        (_has(attrs, 'collection') || _set(attrs, 'collection', this)) && attrs :
         new this.model(attrs, Object.assign({ 'collection': this }, opts));
     }
-
+  
   }
   
   return { uniqueId, Sync, Model, Collection };
